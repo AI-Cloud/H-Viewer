@@ -49,8 +49,12 @@ import ml.puredark.hviewer.dataholders.FavouriteHolder;
 import ml.puredark.hviewer.download.DownloadManager;
 import ml.puredark.hviewer.helpers.DataBackup;
 import ml.puredark.hviewer.helpers.DataRestore;
+import ml.puredark.hviewer.helpers.DynamicIjkLibLoader;
+import ml.puredark.hviewer.helpers.DynamicLibDownloader;
 import ml.puredark.hviewer.helpers.FileHelper;
+import ml.puredark.hviewer.helpers.Logger;
 import ml.puredark.hviewer.helpers.UpdateManager;
+import ml.puredark.hviewer.http.DownloadUtil;
 import ml.puredark.hviewer.http.HViewerHttpClient;
 import ml.puredark.hviewer.ui.activities.BaseActivity;
 import ml.puredark.hviewer.ui.activities.LicenseActivity;
@@ -243,6 +247,10 @@ public class SettingFragment extends PreferenceFragment
             int i = videoPlayerPreference.findIndexOfValue((String) newValue);
             i = (i <= 0) ? 0 : i;
             videoPlayerPreference.setSummary(entries[i]);
+            if (VIDEO_IJKPLAYER.equals(newValue) && !DynamicIjkLibLoader.isLibrariesDownloaded()) {
+                // 未下载播放器解码so包
+                new DynamicLibDownloader(activity).checkDownloadLib();
+            }
         }
         return true;
     }
@@ -257,23 +265,23 @@ public class SettingFragment extends PreferenceFragment
             //备份
             new AlertDialog.Builder(activity).setTitle("确认备份?")
                     .setMessage("将会覆盖之前的备份")
-                    .setPositiveButton(getString(R.string.ok), ((dialog, which) -> {
+                    .setPositiveButton(getString(R.string.ok), (dialog, which) -> {
                         String backup = new DataBackup().DoBackup();
                         activity.showSnackBar(backup);
-                    }))
+                    })
                     .setNegativeButton(getString(R.string.cancel), null).show();
 
         } else if (preference.getKey().equals(KEY_PREF_BKRS_RESTORE)) {
             //还原
             new AlertDialog.Builder(activity).setTitle("确认恢复?")
                     .setMessage("如已存在同名站点，不会覆盖")
-                    .setPositiveButton(getString(R.string.ok), ((dialog, which) -> {
+                    .setPositiveButton(getString(R.string.ok), (dialog, which) -> {
                         String restore = new DataRestore().DoRestore();
                         Intent intent = new Intent();
                         activity.setResult(RESULT_OK, intent);
                         Toast.makeText(activity, restore, Toast.LENGTH_LONG).show();
                         activity.finish();
-                    }))
+                    })
                     .setNegativeButton(getString(R.string.cancel), null).show();
 
         } else if (preference.getKey().equals(KEY_PREF_ABOUT_LICENSE)) {
@@ -322,7 +330,7 @@ public class SettingFragment extends PreferenceFragment
             new AlertDialog.Builder(activity).setTitle("确定要导出收藏夹？")
                     .setMessage("将导出至当前指定的下载目录")
                     .setPositiveButton("确定", (dialog, which) -> {
-                        DocumentFile file = FileHelper.createFileIfNotExist("favourites.json", DownloadManager.getDownloadPath(), Names.backupdirname);
+                        DocumentFile file = FileHelper.createFileIfNotExist(Names.favouritesname, DownloadManager.getDownloadPath(), Names.backupdirname);
                         if (file != null) {
                             FavouriteHolder holder = new FavouriteHolder(activity);
                             String json = new Gson().toJson(holder.getFavourites());
@@ -344,11 +352,13 @@ public class SettingFragment extends PreferenceFragment
                         } else {
                             try {
                                 List<Pair<CollectionGroup, List<LocalCollection>>> favGroups =
-                                        new Gson().fromJson(json, new TypeToken<ArrayList<Pair<CollectionGroup, ArrayList<LocalCollection>>>>() {}.getType());
+                                        new Gson().fromJson(json, new TypeToken<ArrayList<Pair<CollectionGroup, ArrayList<LocalCollection>>>>() {
+                                        }.getType());
                                 FavouriteHolder holder = new FavouriteHolder(activity);
-                                for(Pair<CollectionGroup, List<LocalCollection>> pair : favGroups){
+                                for (Pair<CollectionGroup, List<LocalCollection>> pair : favGroups) {
+                                    Logger.d("DataStore", "" + pair.first);
                                     CollectionGroup group = holder.getGroupByTitle(pair.first.title);
-                                    if(group==null) {
+                                    if (group == null) {
                                         group = pair.first;
                                         group.gid = holder.addFavGroup(group);
                                     }
@@ -489,4 +499,5 @@ public class SettingFragment extends PreferenceFragment
             }
         });
     }
+
 }

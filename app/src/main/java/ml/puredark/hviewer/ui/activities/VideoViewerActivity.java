@@ -1,6 +1,5 @@
 package ml.puredark.hviewer.ui.activities;
 
-import android.app.ActionBar;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
@@ -21,7 +20,6 @@ import com.gc.materialdesign.views.ProgressBarCircularIndeterminate;
 import com.shuyu.gsyvideoplayer.GSYPreViewManager;
 import com.shuyu.gsyvideoplayer.GSYVideoPlayer;
 import com.shuyu.gsyvideoplayer.utils.OrientationUtils;
-import com.shuyu.gsyvideoplayer.video.CustomGSYVideoPlayer;
 import com.shuyu.gsyvideoplayer.video.GSYBaseVideoPlayer;
 import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer;
 
@@ -30,6 +28,7 @@ import butterknife.ButterKnife;
 import ml.puredark.hviewer.HViewerApplication;
 import ml.puredark.hviewer.R;
 import ml.puredark.hviewer.beans.Video;
+import ml.puredark.hviewer.helpers.DynamicIjkLibLoader;
 import ml.puredark.hviewer.helpers.Logger;
 import ml.puredark.hviewer.helpers.MDStatusBarCompat;
 import ml.puredark.hviewer.ui.fragments.SettingFragment;
@@ -50,7 +49,7 @@ public class VideoViewerActivity extends BaseActivity {
     ProgressBarCircularIndeterminate progressBar;
 
     private OrientationUtils orientationUtils;
-    private CustomGSYVideoPlayer videoPlayer;
+    private StandardGSYVideoPlayer videoPlayer;
 
     private Video video;
 
@@ -146,7 +145,7 @@ public class VideoViewerActivity extends BaseActivity {
                 Logger.d("VideoViewerActivity", "shouldInterceptRequest:" + url);
                 if (shouldInterceptVideo && isVideoUrl(Uri.decode(url))) {
                     Logger.d("VideoViewerActivity", "Intercepted video");
-                    if (VIDEO_IJKPLAYER.equals(videoPlayerType)) {
+                    if (VIDEO_IJKPLAYER.equals(videoPlayerType) && DynamicIjkLibLoader.isLibrariesDownloaded()) {
                         try {
                             runOnUiThread(() -> {
                                 videoPlayer.setVisibility(View.VISIBLE);
@@ -218,8 +217,8 @@ public class VideoViewerActivity extends BaseActivity {
     }
 
     private void initVideoPlayer() {
-        if (VIDEO_IJKPLAYER.equals(videoPlayerType)) {
-            videoPlayer = new CustomGSYVideoPlayer(this);
+        if (VIDEO_IJKPLAYER.equals(videoPlayerType) && DynamicIjkLibLoader.isLibrariesDownloaded()) {
+            videoPlayer = new StandardGSYVideoPlayer(this);
             CoordinatorLayout.LayoutParams layoutParams = new CoordinatorLayout.LayoutParams(
                     CoordinatorLayout.LayoutParams.MATCH_PARENT,
                     CoordinatorLayout.LayoutParams.MATCH_PARENT);
@@ -228,6 +227,7 @@ public class VideoViewerActivity extends BaseActivity {
 
             orientationUtils = new OrientationUtils(this, videoPlayer);
 
+            videoPlayer.setIjkLibLoader(new DynamicIjkLibLoader());
             //初始化不打开外部的旋转
             orientationUtils.setEnable(false);
             //关闭自动旋转
@@ -242,8 +242,6 @@ public class VideoViewerActivity extends BaseActivity {
             videoPlayer.getBackButton().setVisibility(View.GONE);
             //打开非全屏下触摸效果
             videoPlayer.setIsTouchWiget(true);
-            //关闭进度条小窗口预览（不完善）
-            videoPlayer.setOpenPreView(false);
             videoPlayer.getFullscreenButton().setOnClickListener(v -> {
                 //直接横屏
                 orientationUtils.resolveByClick();
@@ -300,7 +298,7 @@ public class VideoViewerActivity extends BaseActivity {
             orientationUtils.backToProtVideo();
         }
 
-        if (StandardGSYVideoPlayer.backFromWindowFull(this)) {
+        if (videoPlayer!=null && StandardGSYVideoPlayer.backFromWindowFull(this)) {
             return;
         }
         super.onBackPressed();
@@ -329,10 +327,12 @@ public class VideoViewerActivity extends BaseActivity {
             webView.removeAllViews();
             webView.destroy();
         }
-        GSYVideoPlayer.releaseAllVideos();
-        GSYPreViewManager.instance().releaseMediaPlayer();
-        if (orientationUtils != null)
-            orientationUtils.releaseListener();
+        if(videoPlayer!=null) {
+            GSYVideoPlayer.releaseAllVideos();
+            GSYPreViewManager.instance().releaseMediaPlayer();
+            if (orientationUtils != null)
+                orientationUtils.releaseListener();
+        }
         super.onDestroy();
     }
 

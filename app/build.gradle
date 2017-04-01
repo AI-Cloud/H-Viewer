@@ -38,17 +38,11 @@ android {
         resValue "string", "app_name", "H-Viewer"
         minSdkVersion 17
         targetSdkVersion 25
-        versionCode 83
-        versionName "0.10.6"
+        versionCode 84
+        versionName "0.11.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
-        renderscriptTargetApi 25
-        renderscriptSupportModeEnabled true
-        multiDexEnabled true
-        resConfigs "zh"
-        ndk {
-            abiFilters 'armeabi', 'armeabi-v7a'
-        }
+        //multiDexEnabled true
 
     }
     compileOptions {
@@ -60,7 +54,7 @@ android {
             applicationIdSuffix '.debug'
             resValue "string", "app_name", "H-Viewer-debug"
             ndk {
-                abiFilters 'armeabi', 'armeabi-v7a', 'x86'
+                abiFilters 'armeabi', 'armeabi-v7a' , 'x86'
             }
             shrinkResources true
             minifyEnabled true
@@ -74,6 +68,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro', 'proguard-fresco.pro'
             zipAlignEnabled true
             signingConfig signingConfigs.release
+            ndk {
+                abiFilters 'armeabi', 'armeabi-v7a'
+            }
         }
     }
     lintOptions {
@@ -97,6 +94,9 @@ android {
         exclude 'META-INF/license.txt'
         exclude 'META-INF/dependencies.txt'
         exclude 'META-INF/LGPL2.1'
+        exclude 'lib/*/libijk*.so'
+        exclude 'lib/*/libRSSupport.so'
+        exclude 'lib/*/librsjni.so'
     }
 }
 
@@ -217,12 +217,15 @@ dependencies {
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.2.1'
     compile 'net.jcip:jcip-annotations:1.0'
     // video player
-    compile 'com.github.CarGuo:GSYVideoPlayer:v1.6.1'
+    //compile 'com.github.CarGuo:GSYVideoPlayer:v1.6.1'
+    compile 'com.github.PureDark:GSYVideoPlayer:ddcf05191e'
+
     // unlock methods, such as pin, fingerprint, etc
     compile 'com.andrognito.pinlockview:pinlockview:2.0.1'
     compile 'com.zwh:RxFingerPrinter:1.0.1'
     compile 'me.zhanghai.android.patternlock:library:2.0.4'
-    compile 'com.eightbitlab:blurview:1.3.2'
+    //compile 'com.eightbitlab:blurview:1.3.2'
+    compile 'com.github.PureDark:BlurView:e26c60d30e'
     //mutidex
     compile 'com.android.support:multidex:+'
 }
