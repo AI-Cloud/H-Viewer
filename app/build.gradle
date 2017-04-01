@@ -60,7 +60,7 @@ android {
             applicationIdSuffix '.debug'
             resValue "string", "app_name", "H-Viewer-debug"
             ndk {
-                abiFilters 'armeabi', 'armeabi-v7a'//, 'x86'
+                abiFilters 'armeabi', 'armeabi-v7a', 'x86'
             }
             shrinkResources true
             minifyEnabled true
