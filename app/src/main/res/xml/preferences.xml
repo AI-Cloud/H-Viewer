@@ -54,6 +54,12 @@
             android:title="@string/settings_view_one_hand"
             android:summary="@string/settings_view_one_hand_summary"/>
 
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="pref_mode_r18_enabled"
+            android:title="R18模式"
+            android:summary="是否开启R18模式"/>
+
         <ListPreference
             android:key="pref_view_video_player"
             android:title="@string/settings_view_video_player"
