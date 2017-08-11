@@ -17,7 +17,7 @@ public class DBHelper {
 
     public synchronized void open(Context context) {
         close();
-        mSqliteHelper = new SQLiteHelper(context, dbName, null, 7);
+        mSqliteHelper = new SQLiteHelper(context, dbName, null, 8);
     }
 
     public synchronized void insert(String sql) {
@@ -117,6 +117,7 @@ public class DBHelper {
             db.execSQL("CREATE TABLE `searchSuggestions`(`title` text primary key)");
             db.execSQL("CREATE TABLE `siteTags`(`sid` integer, `title` text, `url` text, FOREIGN KEY(`sid`) REFERENCES `sites`(`sid`), PRIMARY KEY(`sid`,`title`))");
             db.execSQL("CREATE TABLE `favorSiteTags`(`tid` integer primary key autoincrement, `title` text, `url` text, `index` integer)");
+            db.execSQL("CREATE TABLE `marketSources`(`msid` integer primary key autoincrement, `name` text, `jsonUrl` text)");
         }
 
         @Override
@@ -160,6 +161,8 @@ public class DBHelper {
                 db.execSQL("INSERT INTO `dlGroups` VALUES(1, \"未分类\", 1);");
                 db.execSQL("INSERT INTO `downloads` SELECT `did`, `idCode`, `title`, `referer`, `json`, 0 AS `index`, 1 AS `gid` FROM `_temp_downloads`;");
                 db.execSQL("DROP TABLE `_temp_downloads`;");
+            } else if (oldVersion == 7 && newVersion == 8) {
+                db.execSQL("CREATE TABLE `marketSources`(`msid` integer primary key autoincrement, `name` text, `jsonUrl` text)");
             }
         }
 
